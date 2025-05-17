@@ -1,12 +1,22 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Authorization;
+
 using VideoScripter.Features.Projects.Models;
+using Microsoft.JSInterop;
 
 namespace VideoScripter.Features.Projects;
 
+[Authorize]
 public partial class ProjectDetails
 {
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private ProjectHandler ProjectHandler { get; set; } = default!;
+    [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+    [Inject] protected IJSRuntime JS { get; set; } = default!;
+
     [Parameter] public Guid ProjectId { get; set; }
-    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    protected string UserId { get; set; } = string.Empty;
 
     private ProjectModel? project;
     private bool isLoading = true;
@@ -21,6 +31,9 @@ public partial class ProjectDetails
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        UserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
         await LoadProject();
     }
 
@@ -40,8 +53,7 @@ public partial class ProjectDetails
 
         try
         {
-            var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-            project = await ProjectHandler.GetProjectByIdAsync(ProjectId, user.Id);
+            project = await ProjectHandler.GetProjectByIdAsync(ProjectId, UserId);
         }
         catch (Exception ex)
         {
@@ -83,8 +95,7 @@ public partial class ProjectDetails
 
         try
         {
-            var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-            var result = await ProjectHandler.UpdateProjectAsync(editForm, user.Id);
+            var result = await ProjectHandler.UpdateProjectAsync(editForm, UserId);
 
             if (result != null)
             {
@@ -128,8 +139,7 @@ public partial class ProjectDetails
 
         try
         {
-            var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-            var success = await ProjectHandler.DeleteProjectAsync(ProjectId, user.Id);
+            var success = await ProjectHandler.DeleteProjectAsync(ProjectId, UserId);
 
             if (success)
             {

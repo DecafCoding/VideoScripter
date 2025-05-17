@@ -1,11 +1,21 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Authorization;
+
 using VideoScripter.Features.Projects.Models;
+using Microsoft.JSInterop;
 
 namespace VideoScripter.Features.Projects;
 
-public partial class ProjectsList
+[Authorize]
+public partial class ProjectList : ComponentBase
 {
-    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private ProjectHandler ProjectHandler{ get; set; } = default!;
+    [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+    [Inject] protected IJSRuntime JS { get; set; } = default!;
+
+    protected string UserId { get; set; } = string.Empty;
 
     private List<ProjectModel>? projects;
     private string? statusMessage;
@@ -23,6 +33,9 @@ public partial class ProjectsList
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        UserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
         await LoadProjects();
     }
 
@@ -30,8 +43,7 @@ public partial class ProjectsList
     {
         try
         {
-            var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-            projects = await ProjectHandler.GetUserProjectsAsync(user.Id);
+            projects = await ProjectHandler.GetUserProjectsAsync(UserId);
         }
         catch (Exception ex)
         {
@@ -77,11 +89,9 @@ public partial class ProjectsList
 
         try
         {
-            var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-
             if (isEditMode)
             {
-                var result = await ProjectHandler.UpdateProjectAsync(editForm, user.Id);
+                var result = await ProjectHandler.UpdateProjectAsync(editForm, UserId);
                 if (result != null)
                 {
                     statusMessage = "Project updated successfully!";
@@ -95,7 +105,7 @@ public partial class ProjectsList
             }
             else
             {
-                await ProjectHandler.CreateProjectAsync(projectForm, user.Id);
+                await ProjectHandler.CreateProjectAsync(projectForm, UserId);
                 statusMessage = "Project created successfully!";
                 await LoadProjects(); // Refresh the list
                 CloseProjectModal();
@@ -134,8 +144,7 @@ public partial class ProjectsList
 
         try
         {
-            var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-            var success = await ProjectHandler.DeleteProjectAsync(projectToDelete.Id, user.Id);
+            var success = await ProjectHandler.DeleteProjectAsync(projectToDelete.Id, UserId);
 
             if (success)
             {

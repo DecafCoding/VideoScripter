@@ -1,17 +1,5 @@
 ﻿@page "/projects"
 
-@using Microsoft.AspNetCore.Authorization
-@attribute [Authorize]
-
-@using Microsoft.AspNetCore.Components.Forms
-@using VideoScripter.Features.Projects
-@using VideoScripter.Features.Projects.Models
-@using VideoScripter.Components.Account
-@inject ProjectHandler ProjectHandler
-@inject IdentityUserAccessor UserAccessor
-@inject NavigationManager Navigation
-@inject IJSRuntime JS
-
 <PageTitle>Projects - VideoScripter</PageTitle>
 
 <div class="container-fluid">

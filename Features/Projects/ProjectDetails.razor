@@ -1,16 +1,5 @@
 ﻿@page "/projects/{ProjectId:guid}"
 
-@using Microsoft.AspNetCore.Authorization
-@attribute [Authorize]
-
-@using Microsoft.AspNetCore.Components.Forms
-@using VideoScripter.Features.Projects
-@using VideoScripter.Features.Projects.Models
-@using VideoScripter.Components.Account
-@inject ProjectHandler ProjectHandler
-@inject IdentityUserAccessor UserAccessor
-@inject NavigationManager Navigation
-
 <PageTitle>@(project?.Name ?? "Project Details") - VideoScripter</PageTitle>
 
 <div class="container-fluid">
