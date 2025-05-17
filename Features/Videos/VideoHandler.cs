@@ -179,7 +179,7 @@ public class VideoHandler
             if (videosToAdd.Any())
             {
                 await _context.Videos.AddRangeAsync(videosToAdd);
-                await _context.SaveChangesAsync();
+                var saved = await _context.SaveChangesAsync();
             }
 
             return new AddVideosToProjectResponse

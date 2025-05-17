@@ -1,0 +1,210 @@
+﻿@using VideoScripter.Features.Videos.Models
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Project Videos (@Videos.Count)</h5>
+    </div>
+    <div class="card-body">
+        @if (!Videos.Any())
+        {
+            <div class="text-center p-4">
+                <i class="bi bi-collection-play display-4 text-muted"></i>
+                <p class="text-muted mt-2">No videos added to this project yet</p>
+                <p class="text-muted small">Search and select videos on the left panel</p>
+            </div>
+        }
+        else
+        {
+            <div class="project-videos">
+                @foreach (var video in Videos)
+                {
+                    <div class="project-video-card">
+                        <div class="video-thumbnail">
+                            <img src="@video.ThumbnailUrl" alt="@video.Title" loading="lazy" />
+                            <div class="video-duration">@video.FormattedDuration</div>
+                            <button class="btn btn-sm btn-danger video-remove-btn"
+                                    @onclick:stopPropagation
+                                    @onclick="() => ConfirmRemoveVideo(video)"
+                                    title="Remove video">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div class="video-info">
+                            <h6 class="video-title">@video.Title</h6>
+                            <div class="video-channel">@video.ChannelTitle</div>
+                            <div class="video-stats">
+                                <span><i class="bi bi-eye"></i> @FormatCount(video.ViewCount)</span>
+                                <span><i class="bi bi-calendar3"></i> @video.PublishedAt.ToString("MMM yyyy")</span>
+                            </div>
+                            <a href="https://www.youtube.com/watch?v=@video.Id"
+                               target="_blank"
+                               class="btn btn-sm btn-outline-secondary mt-2 video-watch-btn"
+                               @onclick:stopPropagation>
+                                <i class="bi bi-youtube"></i> Watch on YouTube
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Videos.Count >= 2)
+            {
+                <div class="text-center mt-3">
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i>
+                        You have added @Videos.Count videos to your project.
+                        @if (Videos.Count < 5)
+                        {
+                            <span>You can add up to @(5 - Videos.Count) more.</span>
+                        }
+                    </div>
+                </div>
+            }
+            else if (Videos.Count == 1)
+            {
+                <div class="text-center mt-3">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        You need at least one more video. Add 1-4 more videos on similar topics.
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    @if (showRemoveConfirm)
+    {
+        <div class="modal fade show" style="display: block" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Remove Video</h5>
+                        <button type="button" class="btn-close" @onclick="CloseRemoveConfirm"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to remove this video from your project?</p>
+                        @if (videoToRemove != null)
+                        {
+                            <div class="d-flex mt-2 mb-2">
+                                <div class="flex-shrink-0">
+                                    <img src="@videoToRemove.ThumbnailUrl" alt="@videoToRemove.Title"
+                                         style="width: 120px; height: 68px; object-fit: cover; border-radius: 4px;" />
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="mb-1">@videoToRemove.Title</h6>
+                                    <small class="text-muted">@videoToRemove.ChannelTitle</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseRemoveConfirm">Cancel</button>
+                        <button type="button" class="btn btn-danger" @onclick="RemoveVideo" disabled="@isRemoving">
+                            @if (isRemoving)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                            }
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop fade show"></div>
+    }
+</div>
+
+<style>
+    .project-videos {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-height: 600px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .project-video-card {
+        display: flex;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+
+        .project-video-card .video-thumbnail {
+            position: relative;
+            width: 160px;
+            min-width: 160px;
+            height: 90px;
+        }
+
+            .project-video-card .video-thumbnail img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .project-video-card .video-info {
+            padding: 0.5rem;
+            flex-grow: 1;
+        }
+
+        .project-video-card .video-title {
+            margin-bottom: 0.25rem;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .project-video-card .video-channel {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+
+        .project-video-card .video-stats {
+            display: flex;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+            .project-video-card .video-stats span {
+                margin-right: 0.75rem;
+            }
+
+    .video-remove-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        padding: 0.1rem 0.35rem;
+        opacity: 0.8;
+    }
+
+        .video-remove-btn:hover {
+            opacity: 1;
+        }
+
+    .video-watch-btn {
+        font-size: 0.8rem;
+    }
+
+    /* Custom scrollbar */
+    .project-videos::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .project-videos::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .project-videos::-webkit-scrollbar-thumb {
+        background: #aaa;
+        border-radius: 6px;
+    }
+
+        .project-videos::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+</style>
