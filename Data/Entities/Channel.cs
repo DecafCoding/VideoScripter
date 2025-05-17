@@ -13,8 +13,8 @@ public class Channel : BaseEntity
     public string? UploadsPlaylistId { get; set; }
     public string? ThumbnailURL { get; set; }
     public string? Notes { get; set; }
-    public long? VideoCount { get; set; }
-    public long? SubscriberCount { get; set; }
+    public ulong? VideoCount { get; set; }
+    public ulong? SubscriberCount { get; set; }
     public DateTime PublishedAt { get; set; }
     public DateTime? LastCheckDate { get; set; }
     public int AvgViews { get; set; }
