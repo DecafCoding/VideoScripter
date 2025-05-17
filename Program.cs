@@ -24,6 +24,7 @@ public class Program
 
         // Add services from Features
         builder.Services.AddProjectServices();
+        builder.Services.AddVideoServices(builder.Configuration);
 
         builder.Services.AddAuthentication(options =>
             {
